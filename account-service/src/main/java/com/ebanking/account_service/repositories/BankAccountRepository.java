@@ -11,4 +11,9 @@ public interface BankAccountRepository
     List<BankAccount> findByCustomerId(Long customerId);
 
     boolean existsByCustomerId(Long customerId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT a FROM BankAccount a WHERE a.id = :id")
+    Optional<BankAccount> findByIdForUpdate(
+            @Param("id") String id);
 }
