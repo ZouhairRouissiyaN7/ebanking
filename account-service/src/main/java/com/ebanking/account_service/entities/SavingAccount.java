@@ -12,6 +12,6 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class SavingAccount extends BankAccount {
 
-    @Column(scale = 4)
+    @Column(precision = 7, scale = 4)
     private BigDecimal interestRate = BigDecimal.ZERO;
 }

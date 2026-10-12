@@ -25,7 +25,7 @@ public abstract class BankAccount {
     @Column(nullable = false)
     private Long customerId;
 
-    @Column(nullable = false, scale = 2)
+    @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)

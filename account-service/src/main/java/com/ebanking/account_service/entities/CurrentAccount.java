@@ -12,6 +12,6 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class CurrentAccount extends BankAccount {
 
-    @Column(scale = 2)
+    @Column(precision = 19, scale = 2)
     private BigDecimal overdraft = BigDecimal.ZERO;
 }
