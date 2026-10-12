@@ -6,6 +6,8 @@ import com.ebanking.account_service.services.BankAccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
@@ -13,6 +15,7 @@ import org.springframework.data.domain.Page;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Bank Accounts", description = "Management of current and savings accounts")
 @RestController
 @RequestMapping("/api/accounts")
 @RequiredArgsConstructor

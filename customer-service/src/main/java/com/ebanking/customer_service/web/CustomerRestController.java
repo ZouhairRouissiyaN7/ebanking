@@ -6,6 +6,8 @@ import com.ebanking.customer_service.services.CustomerService;
 
 import jakarta.validation.Valid;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +15,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/customers")
+@Tag(name = "Customers", description = "Customer registration and management")
 public class CustomerRestController {
 
     private final CustomerService service;
