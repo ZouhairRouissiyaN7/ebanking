@@ -3,7 +3,7 @@ package com.ebanking.account_service.clients;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient(name = "customer-service")
+@FeignClient(name = "customer-service", fallbackFactory = CustomerClientFallback.class)
 public interface CustomerClient {
 
     @GetMapping("/api/customers/{id}")
