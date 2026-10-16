@@ -72,8 +72,6 @@ public class SecurityConfig {
                                 HttpMethod.GET,
                                 "/actuator/health")
                         .permitAll()
-
-                        // Swagger documentation for local development
                         .requestMatchers(
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
