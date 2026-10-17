@@ -25,15 +25,25 @@ public class CustomerClientFallback
                 throw new InvalidCustomerException(customerId);
             }
 
-            log.warn(
-                    "Customer lookup failed for customer ID {}: {}",
-                    customerId,
-                    cause.toString());
+            if (cause instanceof FeignException.Unauthorized) {
+                throw new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Customer lookup authentication failed",
+                        cause);
+            }
+
+            if (cause instanceof FeignException.Forbidden) {
+                throw new ResponseStatusException(
+                        HttpStatus.FORBIDDEN,
+                        "Customer lookup access denied",
+                        cause);
+            }
 
             throw new ResponseStatusException(
                     HttpStatus.SERVICE_UNAVAILABLE,
                     "Customer Service is temporarily unavailable",
                     cause);
         };
+
     }
 }
