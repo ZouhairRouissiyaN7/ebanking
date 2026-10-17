@@ -4,13 +4,22 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
-  username: string;
-  roles: string;
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
 }
 
 export interface AppUser {
   username: string;
-  roles: string;
-  token: string;
+  roles: string[];
+  customerId: number | null;
+}
+
+export interface JwtPayload {
+  sub: string;
+  roles: string[];
+  customerId?: number;
+  exp: number;
+  iss?: string;
+  aud?: string[];
 }
