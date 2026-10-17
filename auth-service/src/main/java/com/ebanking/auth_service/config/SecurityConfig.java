@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Configuration;
 
 import org.springframework.http.HttpMethod;
 
+import com.nimbusds.jose.jwk.RSAKey;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -21,9 +23,16 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.User;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.jwt.*;
+import org.springframework.security.oauth2.server.resource.authentication.*;
 
 import com.ebanking.auth_service.repositories.AppUserRepository;
 import com.ebanking.auth_service.entities.AppUser;
+
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
@@ -61,7 +70,8 @@ public class SecurityConfig {
 
         @Bean
         public SecurityFilterChain securityFilterChain(
-                        HttpSecurity http) throws Exception {
+                        HttpSecurity http,
+                        JwtAuthenticationConverter converter) throws Exception {
 
                 return http
                                 .csrf(csrf -> csrf.disable())
@@ -77,7 +87,50 @@ public class SecurityConfig {
                                                                 "/.well-known/jwks.json",
                                                                 "/actuator/health")
                                                 .permitAll()
+                                                .requestMatchers("/api/auth/users/**")
+                                                .hasRole("ADMIN")
                                                 .anyRequest().denyAll())
+                                .oauth2ResourceServer(
+                                                oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
                                 .build();
         }
+
+        @Bean
+        public JwtDecoder jwtDecoder(
+                        RSAKey rsaKey,
+                        @Value("${app.jwt.issuer}") String issuer) {
+                NimbusJwtDecoder decoder = NimbusJwtDecoder
+                                .withPublicKey(rsaKey.toRSAPublicKey())
+                                .build();
+
+                OAuth2TokenValidator<Jwt> audienceValidator = jwt -> jwt.getAudience().contains("ebanking-api")
+                                ? OAuth2TokenValidatorResult.success()
+                                : OAuth2TokenValidatorResult.failure(
+                                                new OAuth2Error(
+                                                                "invalid_token",
+                                                                "Invalid audience",
+                                                                null));
+
+                decoder.setJwtValidator(
+                                new DelegatingOAuth2TokenValidator<>(
+                                                JwtValidators.createDefaultWithIssuer(issuer),
+                                                audienceValidator));
+
+                return decoder;
+        }
+
+        @Bean
+        public JwtAuthenticationConverter jwtAuthenticationConverter() {
+                JwtGrantedAuthoritiesConverter roles = new JwtGrantedAuthoritiesConverter();
+
+                roles.setAuthoritiesClaimName("roles");
+                roles.setAuthorityPrefix("ROLE_");
+
+                JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+
+                converter.setJwtGrantedAuthoritiesConverter(roles);
+
+                return converter;
+        }
+
 }
