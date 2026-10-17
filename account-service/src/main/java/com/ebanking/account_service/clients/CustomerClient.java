@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.*;
 public interface CustomerClient {
 
     @GetMapping("/api/customers/{id}")
-    CustomerResponse getCustomer(@PathVariable("id") Long id);
+    CustomerResponse getCustomer(
+            @PathVariable("id") Long id,
+            @RequestHeader("Authorization") String authorization);
 
     record CustomerResponse(
             Long id,

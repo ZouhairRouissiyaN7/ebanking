@@ -19,7 +19,7 @@ public class CustomerClientFallback
     @Override
     public CustomerClient create(Throwable cause) {
 
-        return customerId -> {
+        return (customerId, authorization) -> {
 
             if (cause instanceof FeignException.NotFound) {
                 throw new InvalidCustomerException(customerId);

@@ -26,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.*;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 import java.util.List;
 import java.math.BigDecimal;
@@ -100,14 +102,27 @@ public class BankAccountServiceImpl implements BankAccountService {
         }
 
         private void verifyCustomer(Long customerId) {
-                try {
-                        CustomerClient.CustomerResponse customer = customerClient.getCustomer(customerId);
 
-                        if (customer == null || customer.id() == null
+                var authentication = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
+
+                if (!(authentication instanceof JwtAuthenticationToken jwtAuth)) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.UNAUTHORIZED,
+                                        "Valid JWT authentication required");
+                }
+
+                String bearerToken = "Bearer " + jwtAuth.getToken().getTokenValue();
+
+                try {
+                        CustomerClient.CustomerResponse customer = customerClient.getCustomer(customerId, bearerToken);
+
+                        if (customer == null
                                         || !customerId.equals(customer.id())) {
                                 throw new ResponseStatusException(
                                                 HttpStatus.BAD_GATEWAY,
-                                                "Invalid response from Customer Service");
+                                                "Invalid Customer Service response");
                         }
 
                 } catch (FeignException.NotFound ex) {
@@ -122,13 +137,13 @@ public class BankAccountServiceImpl implements BankAccountService {
                 } catch (FeignException.Forbidden ex) {
                         throw new ResponseStatusException(
                                         HttpStatus.FORBIDDEN,
-                                        "Not authorized to retrieve customer information",
+                                        "Customer lookup access denied",
                                         ex);
 
                 } catch (FeignException ex) {
                         throw new ResponseStatusException(
                                         HttpStatus.SERVICE_UNAVAILABLE,
-                                        "Customer Service is unavailable",
+                                        "Customer Service unavailable",
                                         ex);
                 }
         }
