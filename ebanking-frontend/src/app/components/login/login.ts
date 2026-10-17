@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
@@ -19,27 +19,28 @@ export class Login {
     password: ['', Validators.required],
   });
 
-  errorMessage = '';
-  loading = false;
+  errorMessage = signal('');
+  loading = signal(false);
 
-  onSubmit() {
-    if (this.loginForm.invalid) return;
+  onSubmit(): void {
+    if (this.loginForm.invalid || this.loading()) return;
 
-    this.loading = true;
-    this.errorMessage = '';
+    this.loading.set(true);
+    this.errorMessage.set('');
 
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
-        this.loading = false;
+        this.loading.set(false);
         this.router.navigate([this.authService.getDefaultRoute()]);
       },
       error: (err) => {
-        this.loading = false;
+        this.loading.set(false);
 
-        this.errorMessage =
+        this.errorMessage.set(
           err.status === 401
             ? 'Invalid username or password.'
-            : 'Unable to connect to the authentication service.';
+            : 'Unable to connect to the authentication service.',
+        );
       },
     });
   }
