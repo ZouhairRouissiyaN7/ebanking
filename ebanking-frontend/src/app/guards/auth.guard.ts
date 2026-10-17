@@ -28,3 +28,14 @@ export const adminGuard: CanActivateFn = () => {
 
   return router.createUrlTree(['/accounts']);
 };
+
+export const homeGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isLoggedIn()) {
+    return router.createUrlTree(['/login']);
+  }
+
+  return router.createUrlTree([authService.getDefaultRoute()]);
+};

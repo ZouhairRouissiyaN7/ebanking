@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
-import { adminGuard, authGuard } from './guards/auth.guard';
+
+import { authGuard, adminGuard, homeGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -28,6 +29,14 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./components/accounts/accounts').then((m) => m.Accounts),
   },
-  { path: '', redirectTo: 'customers', pathMatch: 'full' },
-  { path: '**', redirectTo: 'customers' },
+  {
+    path: '',
+    pathMatch: 'full',
+    canActivate: [homeGuard],
+    children: [],
+  },
+  {
+    path: '**',
+    redirectTo: '',
+  },
 ];

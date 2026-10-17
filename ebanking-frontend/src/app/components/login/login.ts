@@ -31,11 +31,15 @@ export class Login {
     this.authService.login(this.loginForm.value).subscribe({
       next: () => {
         this.loading = false;
-        this.router.navigate(['/customers']);
+        this.router.navigate([this.authService.getDefaultRoute()]);
       },
       error: (err) => {
         this.loading = false;
-        this.errorMessage = err.error?.message ?? 'Invalid credentials';
+
+        this.errorMessage =
+          err.status === 401
+            ? 'Invalid username or password.'
+            : 'Unable to connect to the authentication service.';
       },
     });
   }
