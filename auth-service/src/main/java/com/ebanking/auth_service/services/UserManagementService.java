@@ -1,7 +1,8 @@
 package com.ebanking.auth_service.services;
 
 import com.ebanking.auth_service.dtos.*;
-import com.ebanking.auth_service.entities.*;
+import com.ebanking.auth_service.entities.AppUser;
+import com.ebanking.auth_service.enums.Role;
 import com.ebanking.auth_service.repositories.AppUserRepository;
 
 import org.springframework.dao.DataIntegrityViolationException;

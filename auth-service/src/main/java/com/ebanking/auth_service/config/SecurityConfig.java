@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 
 import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.JOSEException;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -26,6 +27,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.oauth2.server.resource.authentication.*;
 
@@ -98,7 +100,7 @@ public class SecurityConfig {
         @Bean
         public JwtDecoder jwtDecoder(
                         RSAKey rsaKey,
-                        @Value("${app.jwt.issuer}") String issuer) {
+                        @Value("${app.jwt.issuer}") String issuer) throws JOSEException {
                 NimbusJwtDecoder decoder = NimbusJwtDecoder
                                 .withPublicKey(rsaKey.toRSAPublicKey())
                                 .build();

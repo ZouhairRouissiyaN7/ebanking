@@ -2,7 +2,7 @@ package com.ebanking.auth_service.services;
 
 import com.ebanking.auth_service.dtos.TokenResponse;
 import com.ebanking.auth_service.entities.AppUser;
-import com.ebanking.auth_service.entities.Role;
+import com.ebanking.auth_service.enums.Role;
 import com.ebanking.auth_service.repositories.AppUserRepository;
 
 import org.springframework.beans.factory.annotation.Value;
