@@ -1,50 +1,99 @@
-import { Injectable } from '@angular/core';
-import { environment } from '../../environments/environment.development';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+
 import { Observable } from 'rxjs';
+
+import { environment } from '../../environments/environment.development';
+
 import {
-  AccountHistory,
   BankAccount,
-  CreditRequest,
+  AccountHistory,
   DebitRequest,
+  CreditRequest,
   TransferRequest,
+  TransferResult,
+  CreateCurrentAccountRequest,
+  CreateSavingAccountRequest,
 } from '../models/account.model';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AccountService {
-  private apiUrl = `${environment.apiUrl}/accounts`;
+  private readonly http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private readonly apiUrl = `${environment.apiUrl}/accounts`;
 
   getAccounts(): Observable<BankAccount[]> {
     return this.http.get<BankAccount[]>(this.apiUrl);
   }
 
+  getMyAccounts(): Observable<BankAccount[]> {
+    return this.http.get<BankAccount[]>(`${this.apiUrl}/me`);
+  }
+
   getAccount(id: string): Observable<BankAccount> {
-    return this.http.get<BankAccount>(`${this.apiUrl}/${id}`);
+    return this.http.get<BankAccount>(`${this.apiUrl}/${encodeURIComponent(id)}`);
   }
 
   getCustomerAccounts(customerId: number): Observable<BankAccount[]> {
-    return this.http.get<BankAccount[]>(`${environment.apiUrl}/customers/${customerId}/accounts`);
+    return this.http.get<BankAccount[]>(`${this.apiUrl}/customer/${customerId}`);
+  }
+
+  createCurrentAccount(request: CreateCurrentAccountRequest): Observable<BankAccount> {
+    return this.http.post<BankAccount>(`${this.apiUrl}/current`, request);
+  }
+
+  createSavingAccount(request: CreateSavingAccountRequest): Observable<BankAccount> {
+    return this.http.post<BankAccount>(`${this.apiUrl}/saving`, request);
   }
 
   getAccountHistory(accountId: string, page: number, size: number): Observable<AccountHistory> {
+    const params = new HttpParams().set('page', page).set('size', size);
+
     return this.http.get<AccountHistory>(
-      `${this.apiUrl}/${accountId}/pageOperations?page=${page}&size=${size}`,
+      `${this.apiUrl}/${encodeURIComponent(accountId)}/operations`,
+      { params },
     );
   }
 
-  debit(request: DebitRequest): Observable<DebitRequest> {
-    return this.http.post<DebitRequest>(`${this.apiUrl}/debit`, request);
+  credit(
+    request: CreditRequest,
+    requestKey: string = crypto.randomUUID(),
+  ): Observable<BankAccount> {
+    return this.http.post<BankAccount>(
+      `${this.apiUrl}/${encodeURIComponent(request.accountId)}/credit`,
+      {
+        amount: request.amount,
+        description: request.description,
+      },
+      { headers: this.idempotencyHeaders(requestKey) },
+    );
   }
 
-  credit(request: CreditRequest): Observable<CreditRequest> {
-    return this.http.post<CreditRequest>(`${this.apiUrl}/credit`, request);
+  debit(request: DebitRequest, requestKey: string = crypto.randomUUID()): Observable<BankAccount> {
+    return this.http.post<BankAccount>(
+      `${this.apiUrl}/${encodeURIComponent(request.accountId)}/debit`,
+      {
+        amount: request.amount,
+        description: request.description,
+      },
+      { headers: this.idempotencyHeaders(requestKey) },
+    );
   }
 
-  transfer(request: TransferRequest): Observable<void> {
-    return this.http.post<void>(`${this.apiUrl}/transfer`, request);
+  transfer(
+    request: TransferRequest,
+    requestKey: string = crypto.randomUUID(),
+  ): Observable<TransferResult> {
+    return this.http.post<TransferResult>(`${this.apiUrl}/transfer`, request, {
+      headers: this.idempotencyHeaders(requestKey),
+    });
+  }
+
+  private idempotencyHeaders(requestKey: string): HttpHeaders {
+    return new HttpHeaders({
+      'Idempotency-Key': requestKey,
+    });
   }
 }

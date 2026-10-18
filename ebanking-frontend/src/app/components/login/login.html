@@ -47,8 +47,12 @@
           </div>
         </div>
 
-        <button class="btn btn-dark w-100" type="submit" [disabled]="loginForm.invalid || loading">
-          @if (loading) {
+        <button
+          class="btn btn-dark w-100"
+          type="submit"
+          [disabled]="loginForm.invalid || loading()"
+        >
+          @if (loading()) {
             <span class="spinner-border spinner-border-sm me-2"></span>
           }
           Login

@@ -13,27 +13,201 @@
   </div>
 }
 
-<div class="row g-4">
-  <div class="col-md-5">
-    <div class="card shadow-sm mb-4">
-      <div class="card-header bg-dark text-white"><i class="bi bi-search me-2"></i>Search...</div>
-      <div class="card-body">
-        <form [formGroup]="searchForm" (ngSubmit)="searchAccount()">
-          <div class="input-group">
-            <input
-              type="text"
-              formControlName="accountId"
-              placeholder="Enter account ID..."
-              class="form-control"
-            />
-            <button type="submit" class="btn btn-dark" [disabled]="searchForm.invalid">
-              <i class="bi bi-search"></i>
-            </button>
-          </div>
-        </form>
-      </div>
+@if (isAdmin()) {
+  <div class="d-flex justify-content-end mb-3">
+    <button type="button" class="btn btn-primary" (click)="toggleCreateForm()">
+      <i
+        class="bi"
+        [class.bi-plus-circle]="!showCreateForm()"
+        [class.bi-x-circle]="showCreateForm()"
+      ></i>
+
+      {{ showCreateForm() ? 'Cancel' : 'New Bank Account' }}
+    </button>
+  </div>
+}
+
+@if (createSuccess()) {
+  <div class="alert alert-success alert-dismissible" role="alert">
+    <i class="bi bi-check-circle me-2"></i>
+    {{ createSuccess() }}
+
+    <button
+      type="button"
+      class="btn-close"
+      aria-label="Close"
+      (click)="createSuccess.set('')"
+    ></button>
+  </div>
+}
+
+@if (isAdmin() && showCreateForm()) {
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-dark text-white">
+      <i class="bi bi-plus-circle me-2"></i>
+      Create Bank Account
     </div>
 
+    <div class="card-body">
+      @if (createError()) {
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-circle me-2"></i>
+          {{ createError() }}
+        </div>
+      }
+
+      <form [formGroup]="createAccountForm" (ngSubmit)="createAccount()">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label"> Customer <span class="text-danger">*</span> </label>
+
+            <select class="form-select" formControlName="customerId">
+              <option [ngValue]="null">Select a customer...</option>
+
+              @for (customer of customers(); track customer.id) {
+                <option [ngValue]="customer.id">{{ customer.name }} ({{ customer.email }})</option>
+              }
+            </select>
+
+            @if (loadingCustomers()) {
+              <small class="text-muted"> Loading customers... </small>
+            }
+
+            @if (!loadingCustomers() && customersLoaded() && customers().length === 0) {
+              <small class="text-warning d-block"> No customers available. </small>
+            }
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label"> Account Type <span class="text-danger">*</span> </label>
+
+            <select
+              class="form-select"
+              formControlName="accountType"
+              (change)="onAccountTypeChange()"
+            >
+              <option value="CURRENT">Current Account</option>
+              <option value="SAVING">Savings Account</option>
+            </select>
+          </div>
+
+          @if (accountType() === 'CURRENT') {
+            <div class="col-md-6">
+              <label class="form-label"> Authorized Overdraft (MAD) </label>
+
+              <input
+                type="number"
+                class="form-control"
+                formControlName="overdraft"
+                min="0"
+                step="0.01"
+              />
+
+              <small class="text-muted"> Maximum authorized negative balance. </small>
+            </div>
+          } @else {
+            <div class="col-md-6">
+              <label class="form-label"> Annual Interest Rate (%) </label>
+
+              <div class="input-group">
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="interestRatePercent"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                />
+
+                <span class="input-group-text">%</span>
+              </div>
+
+              <small class="text-muted"> Example: 2.50 means 2.50%. </small>
+            </div>
+          }
+        </div>
+
+        <div class="d-flex justify-content-end gap-2 mt-4">
+          <button type="button" class="btn btn-outline-secondary" (click)="toggleCreateForm()">
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            class="btn btn-dark"
+            [disabled]="createAccountForm.invalid || creatingAccount() || loadingCustomers()"
+          >
+            @if (creatingAccount()) {
+              <span class="spinner-border spinner-border-sm me-2"></span>
+            } @else {
+              <i class="bi bi-check-circle me-2"></i>
+            }
+
+            Create Account
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-dark text-white">
+    <i class="bi bi-wallet2 me-2"></i>
+    {{ isAdmin() ? 'All Bank Accounts' : 'My Bank Accounts' }}
+  </div>
+
+  <div class="card-body">
+    @if (loading()) {
+      <div class="text-center py-4">
+        <div class="spinner-border text-primary"></div>
+      </div>
+    } @else if (accounts().length === 0) {
+      <p class="text-muted mb-0">No bank accounts found.</p>
+    } @else {
+      <div class="row g-3">
+        @for (account of accounts(); track account.id) {
+          <div class="col-md-6 col-lg-4">
+            <button
+              type="button"
+              class="card w-100 text-start h-100 border p-3"
+              [class.border-primary]="selectedAccount()?.id === account.id"
+              [disabled]="creatingAccount()"
+              (click)="selectAccount(account)"
+            >
+              <div class="d-flex justify-content-between mb-2">
+                <span
+                  class="badge"
+                  [class.bg-primary]="account.type === 'CURRENT'"
+                  [class.bg-success]="account.type === 'SAVING'"
+                >
+                  {{ account.type }}
+                </span>
+
+                <small class="text-muted">
+                  {{ account.status }}
+                </small>
+              </div>
+
+              <h5 class="mb-2">{{ account.balance | number: '1.2-2' }} MAD</h5>
+
+              <small class="text-muted text-break">
+                {{ account.id }}
+              </small>
+
+              @if (isAdmin()) {
+                <small class="d-block mt-2"> Customer #{{ account.customerId }} </small>
+              }
+            </button>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-5">
     @if (selectedAccount()) {
       <div class="card shadow-sm mb-4">
         <div class="card-header bg-dark text-white">
@@ -43,7 +217,7 @@
           <div class="mb-2">
             <span
               class="badge"
-              [class]="selectedAccount()!.type === 'CurrentAccount' ? 'bg-primary' : 'bg-success'"
+              [class]="selectedAccount()!.type === 'CURRENT' ? 'bg-primary' : 'bg-success'"
             >
               {{ selectedAccount()!.type }}
             </span>
@@ -57,7 +231,7 @@
             </tr>
             <tr>
               <td class="text-muted">Owner</td>
-              <td>{{ selectedAccount()!.customerDTO.name }}</td>
+              <td>Customer #{{ selectedAccount()!.customerId }}</td>
             </tr>
             <tr>
               <td class="text-muted">Balance</td>
@@ -83,17 +257,17 @@
               </td>
             </tr>
 
-            @if (selectedAccount()!.overDraft) {
+            @if (selectedAccount()!.overdraft) {
               <tr>
                 <td class="text-muted">Overdraft</td>
-                <td>{{ selectedAccount()!.overDraft | number: '1.2-2' }}</td>
+                <td>{{ selectedAccount()!.overdraft | number: '1.2-2' }}</td>
               </tr>
             }
 
             @if (selectedAccount()!.interestRate) {
               <tr>
                 <td class="text-muted">Interest Rate</td>
-                <td>{{ selectedAccount()!.interestRate }}%</td>
+                <td>{{ selectedAccount()!.interestRate! * 100 | number: '1.2-2' }}%</td>
               </tr>
             }
           </table>
@@ -152,7 +326,12 @@
             <button
               type="submit"
               class="btn btn-dark w-100"
-              [disabled]="operationForm.invalid || loading()"
+              [disabled]="
+                operationForm.invalid ||
+                operationLoading() ||
+                (operationType() === 'TRANSFER' &&
+                  !operationForm.controls.accountDestination.value?.trim())
+              "
             >
               @if (loading()) {
                 <span class="spinner-border spinner-border-sm me-2"></span>
@@ -189,11 +368,11 @@
                   <th>Date</th>
                   <th>Type</th>
                   <th>Amount</th>
-                  <th>Description</th>
+                  <th>Balance After</th>
                 </tr>
               </thead>
               <tbody>
-                @for (op of accountHistory()!.accountOperationDTOs; track op.id) {
+                @for (op of accountHistory()!.content; track op.id) {
                   <tr>
                     <td class="text-muted small">
                       {{ op.operationDate | date: 'dd/MM/yyyy HH:mm' }}
@@ -214,7 +393,7 @@
                       {{ op.type === 'CREDIT' ? '+' : '-' }}
                       {{ op.amount | number: '1.2-2' }}
                     </td>
-                    <td class="text-muted small">{{ op.description }}</td>
+                    <td class="text-muted">{{ op.balanceAfter | number: '1.2-2' }} MAD</td>
                   </tr>
                 } @empty {
                   <tr>
