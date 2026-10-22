@@ -36,6 +36,10 @@
             <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
               <i class="bi bi-person-circle me-1"></i>{{ authService.currentUser()?.username }}
             </a>
+            <a routerLink="/chat" class="nav-link">
+              <i class="bi bi-chat-dots me-1"></i>
+              AI Assistant
+            </a>
             <ul class="dropdown-menu dropdown-menu-end">
               <li>
                 <span class="dropdown-item-next text-muted small">

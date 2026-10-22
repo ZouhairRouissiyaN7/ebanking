@@ -87,6 +87,10 @@ public class GatewaySecurityConfig {
                                                                 "/api/accounts/**")
                                                 .authenticated()
                                                 .pathMatchers("/api/auth/users/**").authenticated()
+                                                .pathMatchers(
+                                                                HttpMethod.POST,
+                                                                "/api/chat")
+                                                .authenticated()
                                                 .anyExchange().denyAll())
                                 .oauth2ResourceServer(oauth -> oauth
                                                 .jwt(jwt -> jwt

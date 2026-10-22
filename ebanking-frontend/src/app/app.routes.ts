@@ -30,6 +30,11 @@ export const routes: Routes = [
     loadComponent: () => import('./components/accounts/accounts').then((m) => m.Accounts),
   },
   {
+    path: 'chat',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/chat/chat').then((m) => m.Chat),
+  },
+  {
     path: '',
     pathMatch: 'full',
     canActivate: [homeGuard],
